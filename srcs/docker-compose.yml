@@ -1,0 +1,48 @@
+version: "3.5"
+
+networks:
+  network:
+    name: network
+    driver: bridge
+
+volumes:
+  database:
+  html:
+
+services:
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    env_file:
+      - .env
+    volumes:
+      - database:/var/lib/mysql
+    networks:
+      - network
+    restart: unless-stopped
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+    volumes:
+      - html:/var/www/html
+    networks:
+      - network
+    restart: unless-stopped
+
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    ports:
+      - "443:443"
+    depends_on:
+      - wordpress
+    volumes:
+      - html:/var/www/html
+    networks:
+      - network
+    restart: unless-stopped
